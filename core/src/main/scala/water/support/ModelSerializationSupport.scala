@@ -75,6 +75,19 @@ trait ModelSerializationSupport {
     destination
   }
 
+  def exportMOJOModelToHDFS(model: Model[_, _, _], destination: URI, sc: SparkContext): URI = {
+    try {
+    val fs = FileSystem.get(sc.hadoopConfiguration)
+    val output = fs.create(new Path(destination))
+    val os = new BufferedOutputStream(output)
+    model.getMojo.writeTo(os)
+    } catch {
+      case e: IllegalArgumentException =>
+        throw new IllegalArgumentException (s"Error while writing to HDFS (most likely no HDFS is available) in destination $destination : ${e.getMessage}")
+    }
+    destination
+  }
+
   def loadMOJOModel(source: URI): MojoModel = {
     hex.genmodel.MojoModel.load(source.getPath)
   }
